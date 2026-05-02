@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FedShield | Personalized FL Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --card: #151921;
+            --accent: #4d8bff;
+            --accent-glow: rgba(77, 139, 255, 0.3);
+            --ham: #00d084;
+            --spam: #ff4d4d;
+            --smishing: #ff9f43;
+            --text: #e0e6ed;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            height: 100vh; 
+            display: grid;
+            grid-template-columns: 320px 1fr 350px;
+            overflow: hidden;
+        }
+
+        /* ── SIDEBAR ── */
+        aside {
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .logo { 
+            font-size: 22px; 
+            font-weight: 700; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .field { margin-bottom: 15px; }
+        .field label { display: block; font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
+        input, select {
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input:focus { border-color: var(--accent); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 15px var(--accent-glow); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { background: #334155; box-shadow: none; cursor: not-allowed; }
+
+        /* ── CHAT AREA ── */
+        main {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #chat {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .msg:hover { border-color: var(--border); background: rgba(255,255,255,0.02); }
+        .msg-me { align-self: flex-end; background: #1e293b; border-bottom-right-radius: 4px; }
+        .msg-them { align-self: flex-start; background: #0f172a; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+        
+        .msg-meta { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; display:flex; justify-content: space-between; }
+        .msg-text { font-size: 15px; line-height: 1.5; }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+        .badge-ham { background: rgba(0, 208, 132, 0.1); color: var(--ham); }
+        .badge-spam { background: rgba(255, 77, 77, 0.1); color: var(--spam); }
+        .badge-smishing { background: rgba(255, 159, 67, 0.1); color: var(--smishing); }
+
+        .correct-ui {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .msg:hover .correct-ui { opacity: 1; }
+        .btn-tiny {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-dim);
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-tiny:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .input-area {
+            padding: 24px;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+        }
+        .input-wrap {
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 10px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            height: 44px;
+        }
+
+        /* Message Bubble Styles */
+        .msg-bubble {
+            padding: 1rem;
+            border-radius: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .msg-bubble:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .msg-bubble.selected-msg {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.05);
+            box-shadow: 0 0 15px rgba(67, 97, 238, 0.2);
+        }
+        .msg-bubble.selected-msg::after {
+            content: "ACTIVE ANALYSIS";
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── RIGHT PANEL ── */
+        .right-panel {
+            background: var(--card);
+            border-left: 1px solid var(--border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .card-title { font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; }
+
+        .pred-res { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+        .res-ham { color: var(--ham); }
+        .res-spam { color: var(--spam); }
+        .res-smish { color: var(--smishing); }
+
+        .bar-wrap { margin-bottom: 8px; }
+        .bar-label { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px; color: var(--text-dim); }
+        .bar-outer { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+        .bar-inner { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #334155; display: inline-block; margin-right: 6px; }
+        .status-online { background: var(--ham); box-shadow: 0 0 10px var(--ham); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s;
+            z-index: 1000;
+            border: 1px solid var(--border);
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="logo">FEDSHIELD CNN</div>
+        
+        <div class="field">
+            <label>Display Name</label>
+            <input type="text" id="nameInput" placeholder="Your Name">
+        </div>
+
+        <div class="field">
+            <label>Active Client Profile</label>
+            <select id="cidInput">
+                <option value="client_1">Client 1 (Port 5051)</option>
+                <option value="client_2">Client 2 (Port 5052)</option>
+                <option value="client_3">Client 3 (Port 5053)</option>
+            </select>
+        </div>
+
+        <button type="button" id="connBtn" class="btn btn-primary" onclick="app.connect()">
+            CONNECT TO NETWORK
+        </button>
+
+        <div style="margin-top: auto;">
+            <div class="card">
+                <div class="card-title">Network Status</div>
+                <div id="clientList"></div>
+            </div>
+            <div class="card" style="margin-top:10px; padding:10px; height:120px; overflow-y:auto; font-size:10px; font-family:'JetBrains Mono'; color:var(--text-dim);" id="sysLog">
+                [SYSTEM READY]
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <div id="chat">
+            <!-- Initial instructions -->
+            <div style="text-align: center; color: var(--text-dim); margin-top: 50px; font-size: 14px;">
+                Connect to start federated message classification.
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrap">
+                <input type="text" id="msgInput" placeholder="Type a message to classify..." style="flex:1; background:transparent; border:none; color:white; padding:10px; outline:none;">
+                <button type="button" class="btn btn-primary" style="width: auto; padding: 0 20px;" onclick="app.send()">SEND</button>
+            </div>
+        </div>
+    </main>
+
+    <div class="right-panel">
+        <div class="card">
+            <div class="card-title">Global Brain (Server)</div>
+            <div id="globRes" class="pred-res">---</div>
+            <div id="globBars"></div>
+        </div>
+
+        <div class="card" style="border-color: var(--accent);">
+            <div class="card-title">
+                Personalized Head
+                <button type="button" class="btn-tiny" onclick="app.retrain()">RETRAIN NOW</button>
+            </div>
+            <div id="locRes" class="pred-res">---</div>
+            <div id="locBars"></div>
+            <div id="locStatus" style="font-size: 10px; color: var(--text-dim); margin-top: 10px;">Checking client...</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Session Stats</div>
+            <div style="display:flex; justify-content:space-between; font-size: 14px;">
+                <span>Total Messages</span>
+                <span id="statTotal" style="font-weight:700;">0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size: 14px; margin-top: 8px;">
+                <span>Corrected</span>
+                <span id="statCorrect" style="font-weight:700; color: var(--accent);">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        const app = {
+            state: {
+                server: "http://127.0.0.1:5050",
+                local: "http://127.0.0.1:5051",
+                name: localStorage.getItem("cnn_name") || "",
+                cid: localStorage.getItem("cnn_cid") || "client_1",
+                connected: false,
+                messages: [],
+                stats: { total: 0, corrected: 0 }
+            },
+
+            init() {
+                // Set UI from state
+                document.getElementById("nameInput").value = this.state.name;
+                document.getElementById("cidInput").value = this.state.cid;
+                
+                // Key listener
+                document.getElementById("msgInput").addEventListener("keydown", (e) => {
+                    if(e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        this.send();
+                    }
+                });
+
+                // Auto-refresh client list
+                setInterval(() => this.getNetworkStatus(), 5000);
+                setInterval(() => this.pingLocal(), 3000);
+                
+                this.toast("Dashboard Ready");
+            },
+
+            logSys(m) {
+                const el = document.getElementById("sysLog");
+                const div = document.createElement("div");
+                div.innerText = `> ${m}`;
+                el.insertBefore(div, el.firstChild);
+            },
+
+            async connect() {
+                this.state.name = document.getElementById("nameInput").value.trim() || "User";
+                this.state.cid = document.getElementById("cidInput").value;
+                localStorage.setItem("cnn_name", this.state.name);
+                localStorage.setItem("cnn_cid", this.state.cid);
+
+                const portMap = { "client_1": 5051, "client_2": 5052, "client_3": 5053 };
+                const p = portMap[this.state.cid] || 5051;
+                this.state.local = `http://127.0.0.1:${p}`;
+                
+                this.logSys(`Connecting to ${this.state.server}...`);
+
+                try {
+                    const r = await fetch(`${this.state.server}/register`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ client_id: this.state.cid, name: this.state.name })
+                    });
+                    if(r.ok) {
+                        this.state.connected = true;
+                        this.logSys("Server Connected ✓");
+                        this.toast("Connected as " + this.state.name);
+                        document.getElementById("connBtn").innerText = "CONNECTED";
+                        this.loadHistory();
+                    }
+                } catch(e) {
+                    this.logSys("Server Error: " + e.message);
+                    this.toast("Cannot reach server!");
+                }
+            },
+
+            async send() {
+                if(!this.state.connected) { this.toast("Please connect first"); return; }
+                const inp = document.getElementById("msgInput");
+                const text = inp.value.trim();
+                if(!text) return;
+                
+                console.log("[SEND] Triggered:", text);
+                inp.value = "";
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                    const r = await fetch(`${this.state.server}/send_message`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sender: this.state.name, text: text }),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+
+                    if(!r.ok) throw new Error("Server returned " + r.status);
+                    
+                    const msg = await r.json();
+                    console.log("[SEND] Success:", msg);
+                    this.appendMsg(msg);
+                    this.updateComparison(msg.text, msg.probs, msg.label);
+                    
+                    // Buffer to client
+                    fetch(`${this.state.local}/buffer_message`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ text, label: this.labelToInt(msg.label) })
+                    }).catch(e => console.warn("Buffer failed:", e));
+
+                } catch(e) {
+                    console.error("[SEND] Error:", e);
+                    this.toast("SEND FAILED: " + e.message);
+                }
+            },
+
+            async updateComparison(text, globalProbs, globalLabel) {
+                // Update Global
+                this.renderBars("globBars", "globRes", globalProbs, globalLabel);
+                
+                // Fetch Local
+                try {
+                    const r = await fetch(`${this.state.local}/local_predict`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ text })
+                    });
+                    if(r.ok) {
+                        const d = await r.json();
+                        this.renderBars("locBars", "locRes", d.probs, d.label);
+                    }
+                } catch(e) {
+                    document.getElementById("locRes").innerText = "OFFLINE";
+                }
+            },
+
+            renderBars(containerId, resId, probs, label) {
+                const cont = document.getElementById(containerId);
+                const res = document.getElementById(resId);
+                cont.innerHTML = "";
+                res.innerText = label.toUpperCase();
+                res.className = "pred-res res-" + (label === "smishing" ? "smish" : label);
+
+                ["ham", "spam", "smishing"].forEach(k => {
+                    const p = (probs && probs[k]) ? probs[k] : 0;
+                    const row = document.createElement("div");
+                    row.className = "bar-wrap";
+                    row.innerHTML = `
+                        <div class="bar-label"><span>${k.toUpperCase()}</span><span>${p}%</span></div>
+                        <div class="bar-outer"><div class="bar-inner" style="width:${p}%; background:var(--${k})"></div></div>
+                    `;
+                    cont.appendChild(row);
+                });
+            },
+
+            appendMsg(m) {
+                const chat = document.getElementById("chat");
+                if(this.state.stats.total === 0) chat.innerHTML = "";
+                
+                const isMe = m.sender === this.state.name;
+                const div = document.createElement("div");
+                div.className = `msg msg-bubble ${isMe ? 'msg-me' : 'msg-them'}`;
+                div.onclick = () => {
+                    document.querySelectorAll('.msg-bubble').forEach(el => el.classList.remove('selected-msg'));
+                    div.classList.add('selected-msg');
+                    this.updateComparison(m.text, m.probs || {}, m.label);
+                };
+                
+                div.innerHTML = `
+                    <div class="msg-meta">
+                        <span>${m.sender}</span>
+                        <span>${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <div class="msg-text">${this.esc(m.text)}</div>
+                    <div class="badge badge-${m.label}">${m.label} ${m.confidence ? '• '+m.confidence+'%' : ''}</div>
+                    <div class="correct-ui">
+                        <button class="btn-tiny" onclick="app.correct(${m.id}, 'ham', event)">HAM</button>
+                        <button class="btn-tiny" onclick="app.correct(${m.id}, 'spam', event)">SPAM</button>
+                        <button class="btn-tiny" onclick="app.correct(${m.id}, 'smishing', event)">SMISH</button>
+                    </div>
+                `;
+                chat.appendChild(div);
+                chat.scrollTop = chat.scrollHeight;
+                this.state.stats.total++;
+                document.getElementById("statTotal").innerText = this.state.stats.total;
+            },
+
+            async correct(id, label, event) {
+                event.stopPropagation();
+                try {
+                    const r = await fetch(`${this.state.server}/correct_label`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ msg_id: id, correct_label: label, client_id: this.state.cid })
+                    });
+                    if(r.ok) {
+                        this.toast("Correction Saved ✓");
+                        this.state.stats.corrected++;
+                        document.getElementById("statCorrect").innerText = this.state.stats.corrected;
+                        // Refresh history to show change
+                        this.loadHistory();
+                    }
+                } catch(e) { this.toast("Correction failed"); }
+            },
+
+            async loadHistory() {
+                try {
+                    const r = await fetch(`${this.state.server}/get_messages`);
+                    const data = await r.json();
+                    const chat = document.getElementById("chat");
+                    chat.innerHTML = "";
+                    this.state.stats.total = 0;
+                    data.messages.slice(-20).forEach(m => this.appendMsg(m));
+                } catch(e) {}
+            },
+
+            async getNetworkStatus() {
+                try {
+                    const r = await fetch(`${this.state.server}/get_clients`);
+                    const data = await r.json();
+                    const cont = document.getElementById("clientList");
+                    cont.innerHTML = "";
+                    data.clients.forEach(c => {
+                        const div = document.createElement("div");
+                        div.style.fontSize = "13px"; div.style.marginBottom = "8px";
+                        div.innerHTML = `<span class="status-dot ${c.status==='online'?'status-online':''}"></span> ${c.client_id} (${c.name})`;
+                        cont.appendChild(div);
+                    });
+                } catch(e) {}
+            },
+
+            async pingLocal() {
+                const el = document.getElementById("locStatus");
+                const res = document.getElementById("locRes");
+                try {
+                    const r = await fetch(`${this.state.local}/client_status`);
+                    if(r.ok) {
+                        const d = await r.json();
+                        // ── SYNC IDENTITY ──
+                        if (this.state.cid !== d.client_id) {
+                            console.log("Syncing Identity to:", d.client_id);
+                            this.state.cid = d.client_id;
+                            this.register(); // Re-register with correct ID
+                        }
+                        
+                        el.innerText = "CLIENT DETECTED ✓ (" + d.client_id + ")";
+                        el.style.color = "var(--ham)";
+                        if(res.innerText === "OFFLINE" || res.innerText === "---") res.innerText = "READY";
+                    }
+                } catch(e) {
+                    el.innerText = "CLIENT OFFLINE (PORT " + this.state.local.split(':').pop() + ")";
+                    el.style.color = "var(--spam)";
+                    res.innerText = "OFFLINE";
+                }
+            },
+
+            async retrain() {
+                this.toast("Starting 2-epoch Personalization...");
+                try {
+                    const r = await fetch(`${this.state.local}/manual_train`, { method: "POST" });
+                    if(r.ok) this.toast("Personalization Complete ✓");
+                } catch(e) { this.toast("Client Error"); }
+            },
+
+            labelToInt(l) { return l === "spam" ? 1 : l === "smishing" ? 2 : 0; },
+            esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); },
+            toast(m) {
+                const t = document.getElementById("toast");
+                t.innerText = m; t.classList.add("show");
+                setTimeout(() => t.classList.remove("show"), 3000);
+            }
+        };
+
+        // SECURITY LOCK: Prevents accidental reloads
+        window.onbeforeunload = function() {
+            return "Preventing accidental refresh...";
+        };
+
+        app.init();
+    </script>
+</body>
+</html>

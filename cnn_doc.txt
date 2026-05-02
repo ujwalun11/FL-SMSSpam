@@ -1,0 +1,44 @@
+=== FedShield CNN Pipeline ===
+
+Model : Multi-Channel CNN (3/4/5-gram Conv1D, TensorFlow/Keras)
+Port  : 5050  (does NOT conflict with the DistilBERT server on 5000)
+UI    : open cnn_index.html in browser (Server URL pre-set to http://127.0.0.1:5050)
+
+--- Install dependencies (one-time) ---
+pip install tensorflow flask flask-cors numpy pandas scikit-learn requests nlpaug
+
+--- STEP 1 — Start CNN server (Terminal 1) ---
+python cnn_server.py
+
+--- STEP 2 — Run FL clients (separate terminals) ---
+python cnn_client.py --id client_1 --server http://localhost:5050 --rounds 5
+python cnn_client.py --id client_2 --server http://localhost:5050 --rounds 5
+python cnn_client.py --id client_3 --server http://localhost:5050 --rounds 5
+
+  Add --fast for quick smoke-test (200 samples, 1 epoch per round)
+
+--- STEP 3 — Open UI ---
+Open cnn_index.html in your browser.
+Server URL is pre-set to http://127.0.0.1:5050.
+Enter your name and click Connect.
+
+--- Endpoints (extra FL endpoints beyond standard chat API) ---
+GET  /get_global_weights    FL clients pull global weights
+POST /submit_weights        FL clients push local weights
+POST /aggregate             Trigger FedAvg manually (or auto every 60s)
+GET  /get_tokenizer_config  Download shared Keras tokenizer vocab
+
+--- Files created (existing files NOT modified) ---
+cnn_server.py         Flask + Keras CNN server + HTTP FedAvg
+cnn_client.py         HTTP-based FL client with nlpaug augmentation
+cnn_index.html        UI (copy of index.html, port 5050, CNN labels)
+cnn_doc.txt           This file
+
+--- Files generated at runtime ---
+cnn_global_weights.pkl   Global CNN model weights (checkpoint)
+cnn_tokenizer.json       Keras tokenizer vocab (shared with clients)
+cnn_messages.json        Chat message history for CNN pipeline
+
+=== Existing pipeline (DistilBERT) is unchanged ===
+Run original:  python flwr_server.py --combined   (port 5000)
+Open original: index.html

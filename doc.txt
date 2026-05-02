@@ -1,0 +1,26 @@
+
+.venv\Scripts\activate
+
+python cnn_server.py
+
+
+# Terminal 1
+python cnn_client.py --id client_1 --rounds 1
+
+# Terminal 2
+python cnn_client.py --id client_2 --rounds 1
+
+# Terminal 3
+python cnn_client.py --id client_3 --rounds 1
+
+
+
+
+
+
+python flwr_server.py --combined
+
+python flwr_client.py --id client_1 --server localhost:8080 --chat CHAT --port 5001
+
+python flwr_client.py --id client_2 --server localhost:8080 --chat CHAT --port 5002
+python flwr_client.py --id client_3 --server localhost:8080 --chat CHAT --port 5003
