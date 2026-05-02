@@ -36,8 +36,6 @@ To ensure the model respects user corrections immediately, we implemented the **
 | **Architecture** | DistilBERT / Transformer | **Multi-Channel Conv1D** |
 | **Inference Speed** | Slow (Heavy) | **Very Fast (Lightweight)** |
 | **Personalization** | Global-First | **User-Centric (FedPer)** |
-| **Memory** | Volatile (Lost on restart) | **Persistent (Long-Term JSON History)** |
-| **Stability** | Prone to Catastrophic Forgetting | **Stable via Anchor System** |
 
 ## 6. Key Innovations
 1.  **Long-Term Memory:** Implemented a persistent `corrections_{id}.json` history that re-feeds all historical corrections into every training pass.
